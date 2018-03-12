@@ -1,0 +1,57 @@
+{
+	"extends": ["airbnb-base", "jquery" ],
+	"env": {
+		"browser": true,
+		"es6": true,
+		"jquery": true,
+		"webextensions": true
+	},
+	"parserOptions": {
+		"ecmaVersion": 2017
+	},
+	"rules": {
+		"arrow-spacing": "warn",
+		"array-bracket-spacing": "warn",
+		"block-scoped-var": "off",
+		"brace-style": ["warn", "1tbs"],
+		"camelcase": "warn",
+		"computed-property-spacing": ["error", "never"],
+		"dot-notation": "off",
+		"eqeqeq": "error",
+		"func-names": "off",
+		"indent": ["error", 4],
+		"linebreak-style": ["error", "unix"],
+		"lines-around-comment": "off",
+		"max-len": "off",
+		"no-alert": "error",
+		"no-console": "off",
+		"no-loop-func": "off",
+		"no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
+		"no-multi-spaces": "warn",
+		"no-plusplus": "off",
+		"no-restricted-globals": "off",
+		"no-restricted-syntax": "warn",
+		"no-tabs": "warn",
+		"no-useless-escape": "off",
+		"no-var": "off",
+		"no-underscore-dangle": "off",
+		"no-unused-vars": "warn",
+		"object-curly-spacing": ["warn", "always"],
+		"quote-props": "off",
+		"quotes": ["error", "single"],
+		"prefer-arrow-callback": "off",
+		"prefer-destructuring": "warn",
+		"prefer-template": "off",
+		"semi": ["error", "always"],
+		"space-before-blocks": "warn",
+		"space-in-parens": ["error", "never"],
+		"strict": "off",
+		"vars-on-top": "off"
+	},
+	"globals": {
+		"browser": true,
+		"isFirefox": true,
+		"jQuery": true,
+		"showNotification": true
+	}
+}

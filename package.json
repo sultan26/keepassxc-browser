@@ -1,0 +1,25 @@
+{
+  "name": "keepassxc-browser",
+  "version": "1.0.2",
+  "description": "KeePassXC-Browser",
+  "scripts": {
+    "lint": "eslint --ext .js ./keepassxc-browser"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keepassxreboot/keepassxc-browser.git"
+  },
+  "author": "KeePassXC Team",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/keepassxreboot/keepassxc-browser/issues"
+  },
+  "homepage": "https://github.com/keepassxreboot/keepassxc-browser#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^4.18.2",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-jquery": "^1.0.1",
+    "eslint-plugin-import": "^2.9.0"
+  }
+}

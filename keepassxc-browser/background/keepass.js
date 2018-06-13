@@ -2,6 +2,21 @@
 
 const keepass = {};
 
+// Exports for tests
+if (typeof exports !== 'undefined') {
+    var rewire = require('rewire');
+    var nacl = rewire('../../keepassxc-browser/background/nacl.min.js');
+    nacl.util = rewire('../../keepassxc-browser/background/nacl-util.min.js');
+    var page = rewire('../../keepassxc-browser/background/page.js');
+    page.tabs = [{errorMessage: ''}];
+    var tr = rewire('../../keepassxc-browser/global.js').__get__('tr');
+
+    if (typeof module !== 'undefined' && module.exports) {
+        exports = module.exports = keepass;
+    }
+    exports.keepass = keepass;
+}
+
 keepass.associated = {'value': false, 'hash': null};
 keepass.keyPair = {publicKey: null, secretKey: null};
 keepass.serverPublicKey = '';
@@ -79,12 +94,14 @@ const kpErrors = {
     }
 };
 
-browser.storage.local.get({
-    'latestKeePassXC': {'version': 0, 'versionParsed': 0, 'lastChecked': null},
-    'keyRing': {}}).then((item) => {
-        keepass.latestKeePassXC = item.latestKeePassXC;
-        keepass.keyRing = item.keyRing;
-});
+if (typeof exports === 'undefined' ) {
+    browser.storage.local.get({
+        'latestKeePassXC': {'version': 0, 'versionParsed': 0, 'lastChecked': null},
+        'keyRing': {}}).then((item) => {
+            keepass.latestKeePassXC = item.latestKeePassXC;
+            keepass.keyRing = item.keyRing;
+    });
+}
 
 keepass.sendNativeMessage = function(request, enableTimeout = false) {
     return new Promise((resolve, reject) => {

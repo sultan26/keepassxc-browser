@@ -1,5 +1,24 @@
 'use strict';
 
+// Exports for tests
+if (typeof exports !== 'undefined') {
+    var rewire = require('rewire');
+    var browser = require('sinon-chrome');
+    var page = rewire('../keepassxc-browser/background/page.js');
+    page.tabs = [{errorMessage: ''}];
+
+    var jsdom = require('jsdom');
+    var { JSDOM } = jsdom;
+    var dom = new JSDOM('<!doctype html><html><body></body></html>');   // This could be an actual test page instead
+    global.document = dom.window.document;
+    global.window = dom.window;
+
+    var jQuery = require('../keepassxc-browser/jquery-3.3.1.min.js');
+    var Node = {};
+    Node.TEXT_NODE = 0;
+    Node.COMMENT_NODE = 0;
+}
+
 // contains already called method names
 var _called = {};
 _called.retrieveCredentials = false;
@@ -1348,50 +1367,51 @@ cipObserverHelper.detectURLChange = function() {
     }
 };
 
-MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+if (typeof exports === 'undefined') {
+    MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
-// Detects DOM changes in the document
-let observer = new MutationObserver(function(mutations, observer) {
-    if (document.visibilityState === 'hidden') {
-        return;
-    }
-
-    for (const mut of mutations) {
-        // Skip text nodes
-        if (mut.target.nodeType === Node.TEXT_NODE) {
-            continue;
+    // Detects DOM changes in the document
+    let observer = new MutationObserver(function(mutations, observer) {
+        if (document.visibilityState === 'hidden') {
+            return;
         }
 
-        // Check document URL change and detect new fields
-        cipObserverHelper.detectURLChange();
-
-        // Handle attributes only if CSS display is modified
-        if (mut.type === 'attributes') {
-            const newValue = mut.target.getAttribute(mut.attributeName);
-            if (newValue && (newValue.includes('display') || newValue.includes('z-index'))) {
-                if (mut.target.style.display !== 'none') {
-                    cipObserverHelper.handleObserverAdd(mut.target);
-                } else {
-                    cipObserverHelper.handleObserverRemove(mut.target);
-                }
+        for (const mut of mutations) {
+            // Skip text nodes
+            if (mut.target.nodeType === Node.TEXT_NODE) {
+                continue;
             }
-        } else if (mut.type === 'childList') {
-            cipObserverHelper.handleObserverAdd((mut.addedNodes.length > 0) ? mut.addedNodes[0] : mut.target);
-            cipObserverHelper.handleObserverRemove((mut.removedNodes.length > 0) ? mut.removedNodes[0] : mut.target);
+
+            // Check document URL change and detect new fields
+            cipObserverHelper.detectURLChange();
+
+            // Handle attributes only if CSS display is modified
+            if (mut.type === 'attributes') {
+                const newValue = mut.target.getAttribute(mut.attributeName);
+                if (newValue && (newValue.includes('display') || newValue.includes('z-index'))) {
+                    if (mut.target.style.display !== 'none') {
+                        cipObserverHelper.handleObserverAdd(mut.target);
+                    } else {
+                        cipObserverHelper.handleObserverRemove(mut.target);
+                    }
+                }
+            } else if (mut.type === 'childList') {
+                cipObserverHelper.handleObserverAdd((mut.addedNodes.length > 0) ? mut.addedNodes[0] : mut.target);
+                cipObserverHelper.handleObserverRemove((mut.removedNodes.length > 0) ? mut.removedNodes[0] : mut.target);
+            }
         }
-    }
-});
+    });
 
-// define what element should be observed by the observer
-// and what types of mutations trigger the callback
-observer.observe(document, {
-    subtree: true,
-    attributes: true,
-    childList: true,
-    characterData: true,
-    attributeFilter: ['style']
-});
-
+    // define what element should be observed by the observer
+    // and what types of mutations trigger the callback
+    observer.observe(document, {
+        subtree: true,
+        attributes: true,
+        childList: true,
+        characterData: true,
+        attributeFilter: ['style']
+    });
+}
 
 var cip = {};
 cip.settings = {};
@@ -1401,9 +1421,11 @@ cip.url = null;
 cip.submitUrl = null;
 cip.credentials = [];
 
-jQuery(function() {
-    cip.init();
-});
+if (typeof exports === 'undefined') {
+    jQuery(function() {
+        cip.init();
+    });
+}
 
 cip.init = function() {
     browser.runtime.sendMessage({

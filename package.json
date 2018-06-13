@@ -1,0 +1,35 @@
+{
+  "name": "keepassxc-browser",
+  "version": "1.1.7",
+  "description": "KeePassXC-Browser",
+  "scripts": {
+    "all-tests": "npm run unit-tests && npm run integration-tests",
+    "build": "mkdir -p build && rm -f build/keepassxc-browser-*.zip && cd keepassxc-browser && zip -rq ../build/keepassxc-browser-$(cat manifest.json | jq -r '.version').zip *",
+    "integration-tests": "./node_modules/.bin/mocha test/integration.js --timeout 60000",
+    "unit-tests": "./node_modules/.bin/mocha test/unit.js --timeout 60000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keepassxreboot/keepassxc-browser.git"
+  },
+  "author": "KeePassXC Team",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/keepassxreboot/keepassxc-browser/issues"
+  },
+  "homepage": "https://github.com/keepassxreboot/keepassxc-browser#readme",
+  "dependencies": {
+    "npm": "^6.0.1"
+  },
+  "devDependencies": {
+    "assert": "^1.4.1",
+    "chromedriver": "^2.35.0",
+    "file-url": "^2.0.2",
+    "geckodriver": "^1.10.0",
+    "jsdom": "^11.11.0",
+    "mocha": "^5.0.0",
+    "rewire": "^3.0.2",
+    "selenium-webdriver": "^3.0.1",
+    "sinon-chrome": "^2.3.2"
+  }
+}

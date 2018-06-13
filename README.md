@@ -23,3 +23,10 @@ This can cause unsaved changes not to be saved. If you use this method it's impo
 ## Protocol
 
 The details about the messaging protocol used with the browser extension and KeePassXC can be found [here](keepassxc-protocol.md).
+
+## Testing
+
+Run `npm install` and then you can use the following commands for testing:
+- `npm run unit-tests`
+- `npm run integration-tests`
+- `npm run all-tests`

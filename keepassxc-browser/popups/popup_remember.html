@@ -1,16 +1,18 @@
+<!DOCTYPE html>
 <html>
   <head>
     <title data-i18n="popupTitle"></title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="popup.css" />
     <link rel="stylesheet" href="../options/bootstrap.min.css" />
-    <script type="text/javascript" src="../browser-polyfill.min.js"></script>
-    <script type="text/javascript" src="../global.js"></script>
-    <script type="text/javascript" src="../jquery-3.3.1.min.js"></script>
-    <script type="text/javascript" src="../options/bootstrap.min.js" /></script>
-    <script type="text/javascript" src="popup_functions.js"></script>
-    <script type="text/javascript" src="popup_remember.js"></script>
-    <style type="text/css">
+    <script src="../browser-polyfill.min.js"></script>
+    <script src="../global.js"></script>
+    <script src="../jquery-3.3.1.min.js"></script>
+    <script src="../options/bootstrap.min.js"></script>
+    <script src="popup_functions.js"></script>
+    <script src="popup_remember.js"></script>
+    <script defer src="../translate.js"></script>
+    <style>
       .credentials {display: none; border-top: 1px solid #333;}
       .connected-database {display: none; font-size: 85%; color: #787878;}
       .credentials .username-new {display: none;}
@@ -47,6 +49,5 @@
       <p data-i18n="popupRememberChooseCredentials"></p>
       <ul id="list"></ul>
     </div>
-    <script type="text/javascript" src="../translate.js"></script>
   </body>
 </html>

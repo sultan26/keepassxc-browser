@@ -104,7 +104,7 @@
         "description": "Checkbox text below the password generator input field."
     },
     "passwordGeneratorBits": {
-        "message": "??? Bits",
+        "message": "$1 Bits",
         "description": "Bits of the generated password."
     },
     "passwordGeneratorTitle": {
@@ -114,6 +114,10 @@
     "passwordGeneratorGenerate": {
         "message": "Generate",
         "description": "Generate button text in password generator."
+    },
+    "passwordGeneratorTryAgain": {
+        "message": "Try again",
+        "description": "Generate button text in password generator when not connected."
     },
     "passwordGeneratorCopy": {
         "message": "Copy",
@@ -132,7 +136,7 @@
         "description": "Password icon title text."
     },
     "passwordGeneratorError": {
-        "message": "Cannot receive generated password.<br />Is KeePassXC running?",
+        "message": "Cannot receive generated password.\nIs KeePassXC running?",
         "description": "Password generator error text when KeePassXC is closed."
     },
     "defineDismiss": {

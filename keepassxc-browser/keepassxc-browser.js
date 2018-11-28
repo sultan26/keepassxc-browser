@@ -146,6 +146,12 @@ cipAutocomplete.onSelect = function(e, ui) {
     cip.setValueWithChange(jQuery(this), ui.item.value);
     const fieldId = cipFields.prepareId(jQuery(this).attr('data-cip-id'));
     const combination = cipFields.getCombination('username', fieldId);
+
+    // Empty the field if used as a TOTP field
+    if (combination.totp) {
+        cip.setValueWithChange(jQuery(this), '');
+    }
+
     combination.loginId = ui.item.loginId;
     cip.fillInCredentials(combination, true, false);
     jQuery(this).data('fetched', true);
@@ -609,6 +615,11 @@ cipDefine.initDescription = function() {
             else if (jQuery(this).data('step') === '2') {
                 cipDefine.selection.password = null;
                 cipDefine.prepareStep3();
+                cipDefine.markAllTOTPFields(jQuery('#b2c-cipDefine-fields'));
+            }
+            else if (jQuery(this).data('step') === '3') {
+                cipDefine.selection.password = null;
+                cipDefine.prepareStep4();
                 cipDefine.markAllStringFields(jQuery('#b2c-cipDefine-fields'));
             }
         });
@@ -637,6 +648,10 @@ cipDefine.initDescription = function() {
                 cipDefine.selection.password = cipFields.prepareId(cipDefine.selection.password);
             }
 
+            if (cipDefine.selection.totp) {
+                cipDefine.selection.totp = cipFields.prepareId(cipDefine.selection.totp);
+            }
+
             let fieldIds = [];
             const fieldKeys = Object.keys(cipDefine.selection.fields);
             for (const i of fieldKeys) {
@@ -647,6 +662,7 @@ cipDefine.initDescription = function() {
             cip.settings['defined-custom-fields'][location] = {
                 username: cipDefine.selection.username,
                 password: cipDefine.selection.password,
+                totp: cipDefine.selection.totp,
                 fields: fieldIds
             };
 
@@ -699,6 +715,7 @@ cipDefine.resetSelection = function() {
     cipDefine.selection = {
         username: null,
         password: null,
+        totp: null,
         fields: []
     };
 };
@@ -707,6 +724,7 @@ cipDefine.isFieldSelected = function($cipId) {
     return (
         $cipId === cipDefine.selection.username ||
         $cipId === cipDefine.selection.password ||
+        $cipId === cipDefine.selection.totp ||
         $cipId in cipDefine.selection.fields
     );
 };
@@ -726,9 +744,19 @@ cipDefine.markAllPasswordFields = function($chooser) {
         cipDefine.selection.password = jQuery(this).data('cip-id');
         jQuery(this).addClass('b2c-fixed-password-field').text(tr('password')).unbind('click');
         cipDefine.prepareStep3();
-        cipDefine.markAllStringFields(jQuery('#b2c-cipDefine-fields'));
+        cipDefine.markAllTOTPFields(jQuery('#b2c-cipDefine-fields'));
     };
     cipDefine.markFields($chooser, 'input[type=\'password\']');
+};
+
+cipDefine.markAllTOTPFields = function($chooser) {
+    cipDefine.eventFieldClick = function(e) {
+        cipDefine.selection.totp = jQuery(this).data('cip-id');
+        jQuery(this).addClass('b2c-fixed-string-field').text('TOTP').unbind('click');
+        cipDefine.prepareStep4();
+        cipDefine.markAllStringFields(jQuery('#b2c-cipDefine-fields'));
+    };
+    cipDefine.markFields($chooser, cipFields.inputQueryPattern + ', select');
 };
 
 cipDefine.markAllStringFields = function($chooser) {
@@ -781,14 +809,22 @@ cipDefine.prepareStep2 = function() {
 };
 
 cipDefine.prepareStep3 = function() {
-    if (!cipDefine.selection.username && !cipDefine.selection.password) {
+    jQuery('div#b2c-help').text('').css('margin-bottom', 0);
+    jQuery('div.b2c-fixed-field:not(.b2c-fixed-password-field,.b2c-fixed-username-field)', jQuery('div#b2c-cipDefine-fields')).remove();
+    jQuery('div:first', jQuery('div#b2c-cipDefine-description')).text(tr('defineChooseTotp'));
+    jQuery('button#b2c-btn-skip:first').data('step', '3');
+    jQuery('button#b2c-btn-again:first').show();
+};
+
+cipDefine.prepareStep4 = function() {
+    if (!cipDefine.selection.username && !cipDefine.selection.password && !cipDefine.selection.totp) {
         jQuery('button#b2c-btn-confirm:first').removeClass('b2c-btn-primary').attr('disabled', true);
     }
 
     jQuery('div#b2c-help').html(tr('defineHelpText')).css('margin-bottom', '5px');
     jQuery('div.b2c-fixed-field:not(.b2c-fixed-password-field,.b2c-fixed-username-field)', jQuery('div#b2c-cipDefine-fields')).remove();
     jQuery('button#b2c-btn-confirm:first').show();
-    jQuery('button#b2c-btn-skip:first').data('step', '3').hide();
+    jQuery('button#b2c-btn-skip:first').data('step', '4').hide();
     jQuery('div:first', jQuery('div#b2c-cipDefine-description')).text(tr('defineConfirmSelection'));
 };
 
@@ -1189,7 +1225,11 @@ cipFields.useDefinedCredentialFields = function() {
     if (cip.settings['defined-custom-fields'] && cip.settings['defined-custom-fields'][location]) {
         const creds = cip.settings['defined-custom-fields'][location];
 
-        let $found = _f(creds.username) || _f(creds.password);
+        if (_f(creds.totp)) {
+            cipAutocomplete.init(_f(creds.totp));
+        }
+
+        let $found = _f(creds.username) || _f(creds.password) || _f(creds.totp);
         for (const i of creds.fields) {
             if (_fs(i)) {
                 $found = true;
@@ -1201,6 +1241,7 @@ cipFields.useDefinedCredentialFields = function() {
             let fields = {
                 username: creds.username,
                 password: creds.password,
+                totp: creds.totp,
                 fields: creds.fields
             };
             cipFields.combinations = [];
@@ -1620,7 +1661,7 @@ cip.getFormActionUrl = function(combination) {
         return null;
     }
 
-    const field = _f(combination.password) || _f(combination.username);
+    const field = _f(combination.password) || _f(combination.username) || _f(combination.totp);
 
     if (field === null) {
         return null;
@@ -1659,6 +1700,7 @@ cip.fillInCredentials = function(combination, onlyPassword, suppressWarnings) {
 
     const u = _f(combination.username);
     const p = _f(combination.password);
+    const t = _f(combination.totp);
 
     if (combination.isNew) {
         // initialize form-submit for remembering credentials
@@ -1677,6 +1719,13 @@ cip.fillInCredentials = function(combination, onlyPassword, suppressWarnings) {
     }
     if (p) {
         cip.p = p;
+    }
+    if (t) {
+        browser.runtime.sendMessage({
+            action: 'page_set_login_id', args: [combination.loginId]
+        });
+        cip.fillInFromActiveElementTOTPOnly(true);
+        return;
     }
 
     if (cip.url === document.location.origin && cip.submitUrl === action && cip.credentials.length > 0) {

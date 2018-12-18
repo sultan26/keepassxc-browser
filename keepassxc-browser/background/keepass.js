@@ -10,8 +10,8 @@ keepass.isConnected = false;
 keepass.isDatabaseClosed = false;
 keepass.isKeePassXCAvailable = false;
 keepass.isEncryptionKeyUnrecognized = false;
-keepass.currentKeePassXC = {'version': 0, 'versionParsed': 0};
-keepass.requiredKeePassXC = 230;
+keepass.currentKeePassXC = {'version': '', 'parsed': {'major': 0, 'minor': 0, 'patch': 0, 'build': 0, 'snapshot': false}};
+keepass.requiredKeePassXC = '2.3.0';
 keepass.nativeHostName = 'org.keepassxc.keepassxc_browser';
 keepass.nativePort = null;
 keepass.keySize = 24;
@@ -80,7 +80,7 @@ const kpErrors = {
 };
 
 browser.storage.local.get({
-    'latestKeePassXC': {'version': 0, 'versionParsed': 0, 'lastChecked': null},
+    'latestKeePassXC': {'version': 0, 'parsed': {}, 'lastChecked': null},
     'keyRing': {}}).then((item) => {
         keepass.latestKeePassXC = item.latestKeePassXC;
         keepass.keyRing = item.keyRing;
@@ -305,7 +305,7 @@ keepass.generatePassword = function(callback, tab, forceCallback) {
             return;
         }
 
-        if (keepass.currentKeePassXC.versionParsed < keepass.requiredKeePassXC) {
+        if (!keepass.compareVersion(keepass.requiredKeePassXC, keepass.currentKeePassXC.version)) {
             callback([]);
             return;
         }
@@ -409,7 +409,9 @@ keepass.associate = function(callback, tab) {
                     keepass.handleError(tab, kpErrors.ASSOCIATION_FAILED);
                 }
                 else {
-                    keepass.setCryptoKey(id, idKey);    // Save the new identification public key as id key for the database
+                    // Use public key as identification key with older KeePassXC releases
+                    const savedKey = keepass.compareVersion('2.3.4', keepass.currentKeePassXC.version) ? idKey : key;
+                    keepass.setCryptoKey(id, savedKey); // Save the new identification public key as id key for the database
                     keepass.associated.value = true;
                     keepass.associated.hash = parsed.hash || 0;
                 }
@@ -781,10 +783,7 @@ keepass.deleteKey = function(hash) {
 
 keepass.setcurrentKeePassXCVersion = function(version) {
     if (version) {
-        keepass.currentKeePassXC = {
-            version: version,
-            versionParsed: Number(version.replace(/\./g, ''))
-        };
+        keepass.currentKeePassXC = keepass.parseVersion(version);
     }
 };
 
@@ -797,7 +796,7 @@ keepass.keePassXCUpdateAvailable = function() {
         }
     }
 
-    return (keepass.currentKeePassXC.versionParsed > 0 && keepass.currentKeePassXC.versionParsed < keepass.latestKeePassXC.versionParsed);
+    return keepass.compareVersion(keepass.currentKeePassXC.version, keepass.latestKeePassXC.version);
 };
 
 keepass.checkForNewKeePassXCVersion = function() {
@@ -809,8 +808,7 @@ keepass.checkForNewKeePassXCVersion = function() {
             const json = JSON.parse(xhr.responseText);
             if (json.tag_name) {
                 version = json.tag_name;
-                keepass.latestKeePassXC.version = version;
-                keepass.latestKeePassXC.versionParsed = Number(version.replace(/\./g, ''));
+                keepass.latestKeePassXC = keepass.parseVersion(version);
             }
         }
 
@@ -1071,4 +1069,47 @@ keepass.updateDatabase = function() {
             });
         });
     }, null);
+};
+
+// Parse the version number. Major, minor and patch are mandatory
+keepass.parseVersion = function(version) {
+    const ver = /^(\d+)\.(\d+)\.(\d+)?\.?(\d+)?-?(\w+)?/.exec(version);
+    if (!ver) {
+        return {'major': 0, 'minor': 0, 'patch': 0, 'build': 0, 'snapshot': false};
+    }
+
+    return {
+        'version' : version,
+        'parsed': {
+            'major': parseInt(ver[1]),
+            'minor': parseInt(ver[2]),
+            'patch': parseInt(ver[3]),
+            'build': parseInt(ver[4]),
+            'snapshot': (ver[5] === 'snapshot' ? true : false)
+        }
+    };
+};
+
+keepass.compareVersion = function(minimum, current) {
+    const min = keepass.parseVersion(minimum).parsed;
+    const cur = keepass.parseVersion(current).parsed;
+
+    if (min === undefined || cur === undefined) {
+        return false;
+    }
+
+    if (min.major !== cur.major) {
+        return min.major < cur.major;
+    } else if (min.minor !== cur.minor) {
+        return min.minor < cur.minor;
+    } else if (min.patch !== cur.patch) {
+        return min.patch < cur.patch;
+    } else if (!isNaN(min.build) && !isNaN(cur.build) && min.build !== cur.build) {
+        return min.build < cur.build;
+    } else if (min.snapshot && !cur.snapshot) {
+        return true; // Stable build without 'snapshot' counts as a newer build
+    } else if (!min.snapshot && cur.snapshot) {
+        return false;
+    }
+    return true;
 };
